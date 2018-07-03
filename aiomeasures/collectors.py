@@ -25,4 +25,4 @@ class Collector(deque):
                 else:
                     yield metric
             except IndexError:
-                raise StopIteration
+                return
