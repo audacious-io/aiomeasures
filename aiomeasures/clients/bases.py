@@ -54,9 +54,8 @@ class Client(metaclass=ABCMeta):
     def format(self, metric, prefix=None):
         raise NotImplementedError()
 
-    @asyncio.coroutine
     @abstractmethod
-    def send(self):
+    async def send(self):
         """Sends key/value pairs via UDP or TCP.
         """
         raise NotImplementedError()

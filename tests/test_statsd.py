@@ -87,8 +87,7 @@ def test_checks(check,expected):
     assert handler.format(check) == expected
 
 
-@asyncio.coroutine
-def fake_server(event_loop, port=None):
+async def fake_server(event_loop, port=None):
     port = port or 0
     class Protocol:
 
@@ -104,7 +103,7 @@ def fake_server(event_loop, port=None):
         def connection_lost(self, *args):
             pass
 
-    transport, protocol = yield from event_loop.create_datagram_endpoint(
+    transport, protocol = await event_loop.create_datagram_endpoint(
         lambda: Protocol(),
         local_addr=('0.0.0.0', port)
     )
@@ -114,22 +113,20 @@ def fake_server(event_loop, port=None):
 
 
 @pytest.mark.asyncio
-def test_client_event(event_loop):
-    transport, protocol, port = yield from fake_server(event_loop)
+async def test_client_event(event_loop):
+    transport, protocol, port = await fake_server(event_loop)
     client = aiomeasures.StatsD('udp://127.0.0.1:%s' % port)
-    asyncio.sleep(.4)
     client.event('title', 'text')
-    yield from asyncio.sleep(.1)
+    await asyncio.sleep(.1)
     assert '_e{5,4}title|text' in protocol.msg
     transport.close()
     client.close()
 
 
 @pytest.mark.asyncio
-def test_client(event_loop):
-    transport, protocol, port = yield from fake_server(event_loop)
+async def test_client(event_loop):
+    transport, protocol, port = await fake_server(event_loop)
     client = aiomeasures.StatsD('udp://127.0.0.1:%s' % port)
-    asyncio.sleep(.4)
     client.incr('example.a')
     client.timing('example.b', 500)
     client.gauge('example.c', 1)
@@ -137,7 +134,7 @@ def test_client(event_loop):
     client.decr('example.e')
     client.counter('example.f', 42)
     client.histogram('example.g', 13)
-    yield from asyncio.sleep(.1)
+    await asyncio.sleep(.1)
     assert 'example.a:1|c' in protocol.msg
     assert 'example.b:500|ms' in protocol.msg
     assert 'example.c:1|g' in protocol.msg
@@ -150,22 +147,21 @@ def test_client(event_loop):
 
 
 @pytest.mark.asyncio
-def test_reliablility(event_loop):
-    transport, protocol, port = yield from fake_server(event_loop)
+async def test_reliablility(event_loop):
+    transport, protocol, port = await fake_server(event_loop)
     client = aiomeasures.StatsD('udp://127.0.0.1:%s' % port)
-    asyncio.sleep(.4)
     client.incr('example.a')
-    yield from asyncio.sleep(.1)
+    await asyncio.sleep(.1)
     assert 'example.a:1|c' in protocol.msg
     transport.close()
 
     client.incr('example.b')
-    yield from asyncio.sleep(.1)
+    await asyncio.sleep(.1)
     assert 'example.b:1|c' not in protocol.msg
 
-    transport, protocol, port = yield from fake_server(event_loop, port)
+    transport, protocol, port = await fake_server(event_loop, port)
     client.incr('example.c')
-    yield from asyncio.sleep(.1)
+    await asyncio.sleep(.1)
     assert 'example.c:1|c' in protocol.msg
     transport.close()
 

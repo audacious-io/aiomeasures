@@ -16,11 +16,10 @@ class StatsDReporter:
         self.loop = loop or asyncio.get_event_loop()
         self.log = logging.getLogger(__name__)
         self.protocol = None
-        self._connecting = asyncio.Lock(loop=self.loop)
+        self._connecting = asyncio.Lock()
         self.protocol = None
 
-    @asyncio.coroutine
-    def send(self, metrics):
+    async def send(self, metrics):
         """Sends key/value pairs via UDP or TCP.
         """
         msg = bytearray()
@@ -34,14 +33,13 @@ class StatsDReporter:
             self.protocol.send(msg)
             msg[:] = []
 
-    @asyncio.coroutine
-    def connect(self):
+    async def connect(self):
         if self.protocol:
             return
 
-        with (yield from self._connecting):
+        async with self._connecting:
             if not self.protocol:
-                transport, protocol = yield from connect(self.addr, self.loop)
+                transport, protocol = await connect(self.addr, self.loop)
                 self.protocol = protocol
 
     def close(self):
@@ -77,10 +75,9 @@ class UDPProtocol(asyncio.Protocol):
             self.transport.close()
 
 
-@asyncio.coroutine
-def connect(addr, loop):
+async def connect(addr, loop):
     if addr.proto == 'udp':
-        transport, protocol = yield from loop.create_datagram_endpoint(
+        transport, protocol = await loop.create_datagram_endpoint(
             lambda: UDPProtocol(),
             remote_addr=addr
         )

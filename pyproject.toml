@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "aiomeasures"
+version = "1.0.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cover = "*"
+pytest-flake8 = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

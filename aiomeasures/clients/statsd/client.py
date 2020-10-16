@@ -34,15 +34,14 @@ class StatsD(Client):
     def format(self, obj):
         return formatting.format(obj, self.prefix, self.tags)
 
-    @asyncio.coroutine
-    def send(self):
+    async def send(self):
         """Sends key/value pairs to StatsD Server.
         """
-        yield from self.reporter.connect()
+        await self.reporter.connect()
         rate = random()
         formatter = self.format
         metrics = self.collector.flush(rate=rate, formatter=formatter)
-        yield from self.reporter.send(metrics)
+        await self.reporter.send(metrics)
 
     def close(self):
         self.reporter.close()
